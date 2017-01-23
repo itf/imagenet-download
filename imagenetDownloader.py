@@ -42,6 +42,8 @@ import sys
 from socket import timeout as TimeoutError
 from socket import error as SocketError
 import imghdr
+import httplib
+from ssl import CertificateError
 
 
 class DownloadError(Exception):
@@ -60,11 +62,11 @@ def download(url, timeout, retry, sleep=0.8):
             content = f.read()
             f.close()
             break
-        except urllib2.HTTPError as e:
+        except (urllib2.HTTPError, httplib.HTTPException, CertificateError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
-        except (urllib2.URLError, TimeoutError, SocketError) as e:
+        except (urllib2.URLError, TimeoutError, SocketError, IOError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
@@ -166,15 +168,16 @@ def main(wnid,
 
     #Define the threads
     def downloader(wnid_list):
-        for wnid in wnids_list:
+        for wnid in wnid_list:
             if human_readable:
                 dir_name = get_words_wnid(wnid, timeout, retry)
             else:
                 dir_name = wnid
-
+            if verbose:
+                print('Downloading ' + dir_name)
             dir_path = os.path.join(out_dir, dir_name)
             if os.path.isdir(dir_path):
-                print("skipping: already have" + dir_name)
+                print('skipping: already have ' + dir_name)
             else:
                 image_url_list = get_image_urls(wnid,timeout,retry)
                 download_images(dir_path, image_url_list, n_images, min_size, timeout, retry, sleep)
