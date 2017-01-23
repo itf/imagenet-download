@@ -19,6 +19,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+# Based on a script by Seiya Tokui. With the following copyright
+# Copyright (c) 2014 Seiya Tokui
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
 import argparse
 import urllib2
 import time
@@ -26,7 +39,10 @@ import os
 import math
 import threading
 import sys
-from socket import timeout as timeout_exception
+from socket import timeout as TimeoutError
+from socket import error as SocketError
+import imghdr
+
 
 class DownloadError(Exception):
     """Base class for exceptions in this module."""
@@ -48,7 +64,7 @@ def download(url, timeout, retry, sleep=0.8):
             count += 1
             if count > retry:
                 raise DownloadError()
-        except (urllib2.URLError, timeout_exception) as e:
+        except (urllib2.URLError, TimeoutError, SocketError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
@@ -88,8 +104,15 @@ def download_images(dir_path, image_url_list, n_images, min_size, timeout, retry
             break
         try:
             image = download(url, timeout, retry)
+            try:
+                extension = imghdr.what('', image) #check if valid image
+                if extension == "jpeg":
+                    extension = "jpg"
+                if extension == None:
+                    raise DownloadError()
+            except:
+                raise DownloadError()
             if (sys.getsizeof(image) > min_size):
-                extension = ((str.split(url, '.')[-1]).split('&')[0]).split('?')[0]
                 image_name = "image_" + str(image_count) + '.' + extension;
                 image_path = os.path.join(dir_path, image_name)
                 image_file = open(image_path, 'w')
