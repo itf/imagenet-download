@@ -161,7 +161,7 @@ def main(wnid,
     wnid_list_len = len(wnids_list)
     wnid_thread_lists = []
     wnid_thread_sizes = int(math.ceil(float(wnid_list_len)/n_threads))
-    print wnid_list_len
+    print(wnid_list_len)
     for i in range(n_threads):
         wnid_thread_lists.append(wnids_list[i*wnid_thread_sizes: (i+1)*wnid_thread_sizes])
 
@@ -183,7 +183,7 @@ def main(wnid,
                 download_images(dir_path, image_url_list, n_images, min_size, timeout, retry, sleep)
 
     #initialize the threads
-    print wnid_thread_lists[0]
+    print(wnid_thread_lists[0])
     download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in xrange(n_threads)]
 
     try:
