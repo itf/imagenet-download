@@ -33,7 +33,7 @@
 # all copies or substantial portions of the Software.
 
 import argparse
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 import os
 import math
@@ -42,7 +42,7 @@ import sys
 from socket import timeout as TimeoutError
 from socket import error as SocketError
 import imghdr
-import httplib
+import http.client
 from ssl import CertificateError
 
 
@@ -56,17 +56,17 @@ def download(url, timeout, retry, sleep=0.8):
     count = 0
     while True:
         try:
-            f = urllib2.urlopen(url, timeout=timeout)
+            f = urllib.request.urlopen(url, timeout=timeout)
             if f is None:
                 raise DownloadError('Cannot open URL' + url)
             content = f.read()
             f.close()
             break
-        except (urllib2.HTTPError, httplib.HTTPException, CertificateError) as e:
+        except (urllib.error.HTTPError, http.client.HTTPException, CertificateError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
-        except (urllib2.URLError, TimeoutError, SocketError, IOError) as e:
+        except (urllib.error.URLError, TimeoutError, SocketError, IOError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
@@ -184,7 +184,7 @@ def main(wnid,
 
     #initialize the threads
     print(wnid_thread_lists[0])
-    download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in xrange(n_threads)]
+    download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in range(n_threads)]
 
     try:
         for t in download_threads:
