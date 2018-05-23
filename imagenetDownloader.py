@@ -69,8 +69,10 @@ def download(url, timeout, retry, sleep=0.8):
         except (urllib.error.URLError, TimeoutError, SocketError, IOError) as e:
             count += 1
             if count > retry:
-                raise DownloadError()
+                raise DownloadError('failed to open ' + url + ' after ' + str(retry) + ' retries')
             time.sleep(sleep)
+        except (Error) as e:
+            print('otherwise uncaught error: ' + e)
     return content
 
 
