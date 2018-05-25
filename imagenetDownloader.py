@@ -84,7 +84,8 @@ def make_directory(path):
 def get_url_request_list_function(request_url):
     def get_url_request_list(wnid, timeout=5, retry=3):
         url = request_url + wnid
-        response = download(url, timeout, retry)
+        response = download(url, timeout, retry).decode()
+        print("response: " + response)
         list = str.split(response)
         return list
     return get_url_request_list
@@ -93,11 +94,11 @@ get_image_urls = get_url_request_list_function('http://www.image-net.org/api/tex
 
 get_subtree_wnid = get_url_request_list_function('http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid=')
 
-get_full_subtree_wnid = get_url_request_list_function('http://imagenet.stanford.edu/api/text/wordnet.structure.hyponym?full=1&wnid=')
+get_full_subtree_wnid = get_url_request_list_function('http://www.image-net.org/api/text/wordnet.structure.hyponym?full=1&wnid=')
 
 def get_words_wnid(wnid, timeout=5, retry=3):
     url = 'http://www.image-net.org/api/text/wordnet.synset.getwords?wnid='+ wnid
-    response = download(url, timeout, retry)
+    response = download(url, timeout, retry).decode()
     return response
 
 def download_images(dir_path, image_url_list, n_images, min_size, timeout, retry, sleep):
@@ -119,7 +120,7 @@ def download_images(dir_path, image_url_list, n_images, min_size, timeout, retry
             if (sys.getsizeof(image) > min_size):
                 image_name = "image_" + str(image_count) + '.' + extension;
                 image_path = os.path.join(dir_path, image_name)
-                image_file = open(image_path, 'w')
+                image_file = open(image_path, 'wb')
                 image_file.write(image)
                 image_file.close()
                 image_count+=1
