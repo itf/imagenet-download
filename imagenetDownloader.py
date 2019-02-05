@@ -33,7 +33,7 @@
 # all copies or substantial portions of the Software.
 
 import argparse
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import time
 import os
 import math
@@ -42,7 +42,7 @@ import sys
 from socket import timeout as TimeoutError
 from socket import error as SocketError
 import imghdr
-import httplib
+import http.client
 from ssl import CertificateError
 
 
@@ -56,21 +56,23 @@ def download(url, timeout, retry, sleep=0.8):
     count = 0
     while True:
         try:
-            f = urllib2.urlopen(url, timeout=timeout)
+            f = urllib.request.urlopen(url, timeout=timeout)
             if f is None:
                 raise DownloadError('Cannot open URL' + url)
             content = f.read()
             f.close()
             break
-        except (urllib2.HTTPError, httplib.HTTPException, CertificateError) as e:
+        except (urllib.error.HTTPError, http.client.HTTPException, CertificateError) as e:
             count += 1
             if count > retry:
                 raise DownloadError()
-        except (urllib2.URLError, TimeoutError, SocketError, IOError) as e:
+        except (urllib.error.URLError, TimeoutError, SocketError, IOError) as e:
             count += 1
             if count > retry:
-                raise DownloadError()
+                raise DownloadError('failed to open ' + url + ' after ' + str(retry) + ' retries')
             time.sleep(sleep)
+        except (Error) as e:
+            print('otherwise uncaught error: ' + e)
     return content
 
 
@@ -82,7 +84,8 @@ def make_directory(path):
 def get_url_request_list_function(request_url):
     def get_url_request_list(wnid, timeout=5, retry=3):
         url = request_url + wnid
-        response = download(url, timeout, retry)
+        response = download(url, timeout, retry).decode()
+        print("response: " + response)
         list = str.split(response)
         return list
     return get_url_request_list
@@ -91,11 +94,11 @@ get_image_urls = get_url_request_list_function('http://www.image-net.org/api/tex
 
 get_subtree_wnid = get_url_request_list_function('http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid=')
 
-get_full_subtree_wnid = get_url_request_list_function('http://imagenet.stanford.edu/api/text/wordnet.structure.hyponym?full=1&wnid=')
+get_full_subtree_wnid = get_url_request_list_function('http://www.image-net.org/api/text/wordnet.structure.hyponym?full=1&wnid=')
 
 def get_words_wnid(wnid, timeout=5, retry=3):
     url = 'http://www.image-net.org/api/text/wordnet.synset.getwords?wnid='+ wnid
-    response = download(url, timeout, retry)
+    response = download(url, timeout, retry).decode()
     return response
 
 def download_images(dir_path, image_url_list, n_images, min_size, timeout, retry, sleep):
@@ -117,7 +120,7 @@ def download_images(dir_path, image_url_list, n_images, min_size, timeout, retry
             if (sys.getsizeof(image) > min_size):
                 image_name = "image_" + str(image_count) + '.' + extension;
                 image_path = os.path.join(dir_path, image_name)
-                image_file = open(image_path, 'w')
+                image_file = open(image_path, 'wb')
                 image_file.write(image)
                 image_file.close()
                 image_count+=1
@@ -161,7 +164,7 @@ def main(wnid,
     wnid_list_len = len(wnids_list)
     wnid_thread_lists = []
     wnid_thread_sizes = int(math.ceil(float(wnid_list_len)/n_threads))
-    print wnid_list_len
+    print(wnid_list_len)
     for i in range(n_threads):
         wnid_thread_lists.append(wnids_list[i*wnid_thread_sizes: (i+1)*wnid_thread_sizes])
 
@@ -183,8 +186,8 @@ def main(wnid,
                 download_images(dir_path, image_url_list, n_images, min_size, timeout, retry, sleep)
 
     #initialize the threads
-    print wnid_thread_lists[0]
-    download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in xrange(n_threads)]
+    print(wnid_thread_lists[0])
+    download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in range(n_threads)]
 
     try:
         for t in download_threads:
