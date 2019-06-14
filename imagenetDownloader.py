@@ -51,11 +51,17 @@ class DownloadError(Exception):
     def __init__(self, message=""):
         self.message = message
 
+def fixURLEncoding(url):
+    """Fixes non-ASCII characters in URLs"""
+    url = urllib.parse.quote(url.encode('utf8'), ':/?=&')
+    return url
+
 def download(url, timeout, retry, sleep=0.8):
     """Downloads a file at given URL."""
     count = 0
     while True:
         try:
+            url = fixURLEncoding(url)
             f = urllib.request.urlopen(url, timeout=timeout)
             if f is None:
                 raise DownloadError('Cannot open URL' + url)
