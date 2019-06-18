@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+# Based on a script by Ivan T. F. Antunes F. With the following copyright
 # Copyright (c) 2017 Ivan T. F. Antunes F.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
