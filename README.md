@@ -1,6 +1,6 @@
 # ImageNet URL Downloader
 
-Python utility script for downloading subtrees of ImageNet using the URLS provided by the ImageNet API.
+Python utility script for downloading subtrees of ImageNet using the URLs provided by the ImageNet API.
 
 This repository is a fork of https://github.com/itf/imagenet-download and includes some upgrades to allow for more robust downloads:
 
